@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>座標マップ登録アプリ（完全版）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <style>
+    body { font-family: sans-serif; font-size: 13px; margin: 10px; }
+    input, select, button { font-size: 13px; padding: 4px; margin: 3px; }
+    #map { height: 800px; width: 800px; border: 1px solid #000; margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+<h2>📍 座標マップ登録アプリ（Google連携）</h2>
+
+<form id="coordForm">
+  <label>サーバー名: <input type="text" id="server" required></label>
+  <label>X: <input type="number" id="x" required min="0" max="1000"></label>
+  <label>Y: <input type="number" id="y" required min="0" max="1000"></label>
+  <label>レベル:
+    <select id="level">
+      <option>1</option><option>2</option><option>3</option>
+      <option>4</option><option>5</option><option>6</option><option>7</option>
+    </select>
+  </label>
+  <label>状態:
+    <select id="status">
+      <option>未取得</option>
+      <option>取得済み</option>
+    </select>
+  </label>
+  <button type="submit">登録</button>
+  <button type="button" onclick="showList()">📋 一覧表示</button>
+</form>
+
+<div id="map"></div>
+
+<script>
+  // ✅ ご自身のWebアプリURLに変更してください
+  const SPREADSHEET_API_URL = "https://script.google.com/macros/s/AKfycbzUPPfVOSyFHfJTA4Eo1uqxlSxjKtQWq0eI9FIZMYYJq-XQndXRmjHJddGCHtUTaA/exec";
+
+  const levelColors = {
+    1: "red", 2: "orange", 3: "yellow",
+    4: "green", 5: "blue", 6: "purple", 7: "black"
+  };
+
+  const map = L.map('map', {
+    crs: L.CRS.Simple,
+    minZoom: -1,
+    maxZoom: 2
+  });
+  const bounds = [[0, 0], [1000, 1000]];
+  L.rectangle(bounds, {color: "#ccc", weight: 1}).addTo(map);
+  map.fitBounds(bounds);
+
+  let allData = [];
+
+  function loadMarkers() {
+    fetch(SPREADSHEET_API_URL)
+      .then(res => res.json())
+      .then(data => {
+        allData = data;
+        data.forEach(item => {
+          const x = Number(item["X"]);
+          const y = Number(item["Y"]);
+          const level = Number(item["レベル"]);
+          const status = item["取得状況"];
+          const server = item["サーバー名"];
+          const color = (status === "取得済み") ? "gray" : levelColors[level] || "black";
+
+          L.circleMarker([1000 - y, x], {
+            radius: 8,
+            color: color,
+            fillColor: color,
+            fillOpacity: 0.8
+          }).addTo(map).bindPopup(
+            `サーバー: ${server}<br>X: ${x}, Y: ${y}<br>レベル: ${level}<br>状態: ${status}`
+          );
+        });
+      })
+      .catch(err => {
+        alert("スプレッドシートからデータを取得できませんでした。");
+        console.error(err);
+      });
+  }
+
+  loadMarkers();
+
+  function showList() {
+    const 未取得 = allData.filter(r => r["取得状況"] === "未取得");
+    const 取得済 = allData.filter(r => r["取得状況"] === "取得済み");
+
+    const html = `
+      <html><head><meta charset="UTF-8"><title>座標リスト</title>
+      <style>
+        body { font-family: sans-serif; font-size: 13px; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; font-size: 13px; }
+        th, td { border: 1px solid #aaa; padding: 4px; text-align: center; }
+      </style>
+      </head><body>
+      <h3>✅ すべての座標</h3>${renderTable(allData)}
+      <h3>📦 取得可能</h3>${renderTable(未取得)}
+      <h3>✔️ 取得済み</h3>${renderTable(取得済)}
+      </body></html>
+    `;
+    const popup = window.open("", "List", "width=600,height=700");
+    popup.document.write(html);
+  }
+
+  function renderTable(rows) {
+    if (rows.length === 0) return "<p>なし</p>";
+    let html = `<table><tr><th>サーバー名</th><th>X</th><th>Y</th><th>レベル</th><th>状態</th></tr>`;
+    rows.forEach(r => {
+      html += `<tr><td>${r["サーバー名"]}</td><td>${r["X"]}</td><td>${r["Y"]}</td><td>${r["レベル"]}</td><td>${r["取得状況"]}</td></tr>`;
+    });
+    return html + `</table>`;
+  }
+
+  document.getElementById("coordForm").addEventListener("submit", e => {
+    e.preventDefault();
+
+    const payload = {
+      "サーバー名": document.getElementById("server").value,
+      "X": document.getElementById("x").value,
+      "Y": document.getElementById("y").value,
+      "レベル": document.getElementById("level").value,
+      "取得状況": document.getElementById("status").value
+    };
+
+    fetch(SPREADSHEET_API_URL, {
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers: { "Content-Type": "application/json" }
+    }).then(res => {
+      alert("登録しました！");
+      location.reload(); // 再読み込みして地図に表示
+    }).catch(err => {
+      alert("登録に失敗しました！");
+      console.error(err);
+    });
+  });
+</script>
+
+</body>
+</html>
