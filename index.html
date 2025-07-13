@@ -1,11 +1,4 @@
 <!DOCTYPE html>
-<script>
-  const password = prompt("パスワードを入力してください：");
-  if (password !== "wareranochonnma") {
-    alert("パスワードが違います");
-    window.location.href = "https://www.google.com";
-  }
-</script>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
@@ -34,6 +27,17 @@
   </style>
 </head>
 <body>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const password = prompt("パスワードを入力してください：");
+  const correctPassword = "moehaotakai";
+  if (password !== correctPassword) {
+    alert("パスワードが違います。");
+    window.location.href = "https://www.google.com";
+  }
+});
+</script>
 
 <h2>📍 座標マップ（未取得のみ表示）</h2>
 
@@ -64,7 +68,7 @@
 <div id="map"></div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbwpwOm3irBxsyM-n9Q1wkrgewUKCeXSW0xRa4xM5UG-cwyrSgyV0wYA852sdR7Qafw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycby-GouMRCAefcrbJr9Tq_Xpwz3VKNc_Lu7VIwwC9UoQG5k-zMH4HWSocOG0KrgUE0eX/exec";
 
 // 地図初期化
 const map = L.map('map', {
@@ -79,8 +83,8 @@ map.setZoom(0);
 
 // 1000×1000 グリッド線を描画
 for (let i = 0; i <= 1000; i++) {
-  L.polyline([[i, 0], [i, 1000]], {color: "#ccc", weight: 0.5}).addTo(map); // 縦線
-  L.polyline([[0, i], [1000, i]], {color: "#ccc", weight: 0.5}).addTo(map); // 横線
+  L.polyline([[i, 0], [i, 1000]], {color: "#ccc", weight: 0.5}).addTo(map);
+  L.polyline([[0, i], [1000, i]], {color: "#ccc", weight: 0.5}).addTo(map);
 }
 
 // 未取得マーカーを表示
