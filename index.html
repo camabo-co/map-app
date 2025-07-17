@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>座標マップ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <style>
+    body { font-family: sans-serif; text-align: center; background: #f2f2f2; }
+    #map { height: 80vh; width: 100%; max-width: 1000px; margin: 0 auto; background-color: #e6e6e6; }
+    form { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 10px auto; }
+    input, select, button { padding: 6px; font-size: 14px; }
+    .buttons { margin: 10px; }
+    .buttons button { margin: 5px; padding: 6px 12px; font-size: 14px; }
+  </style>
+</head>
+<body>
+
+<script>
+  const password = prompt("パスワードを入力してください:");
+  if (password !== "wareranochonnma") {
+    alert("パスワードが間違っています。");
+    document.body.innerHTML = "<h2>アクセスが拒否されました</h2>";
+    throw new Error("Unauthorized access");
+  }
+</script>
+
+<h2>座標マップアプリ</h2>
+
+<div class="buttons">
+  <button id="toggleUnclaimed">📋 未取得リスト</button>
+  <button id="toggleClaimed">📋 取得済みリスト</button>
+</div>
+
+<form id="coordinateForm">
+  <input type="text" name="サーバー名" placeholder="サーバー名（数字）" required>
+  <input type="number" name="X" placeholder="X座標 (0~999)" required>
+  <input type="number" name="Y" placeholder="Y座標 (0~999)" required>
+  <select name="レベル" required>
+    <option value="1">Lv1</option>
+    <option value="2">Lv2</option>
+    <option value="3">Lv3</option>
+    <option value="4">Lv4</option>
+    <option value="5">Lv5</option>
+    <option value="6">Lv6</option>
+    <option value="7">Lv7</option>
+  </select>
+  <button type="submit">登録</button>
+</form>
+
+<div id="map"></div>
+
+<script type="module" src="scripts/map.js"></script>
+
+</body>
+</html>
