@@ -13,14 +13,15 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDdNI04D1xhQihN3DBDdF1_YAp6XRcErDw",
-  authDomain: "maps3-986-ffbbd.firebaseapp.com",
-  databaseURL: "https://maps3-986-ffbbd-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "maps3-986-ffbbd",
-  storageBucket: "maps3-986-ffbbd.appspot.com",
-  messagingSenderId: "701191378459",
-  appId: "1:701191378459:web:d2cf8d869f5cba869d0abe"
+  apiKey: "AIzaSyBIeAUT8GTZ27KYLMSAQxdcy3wC8xGmwcE",
+  authDomain: "maps-server-2.firebaseapp.com",
+  databaseURL: "https://maps-server-2-default-rtdb.asia-southeast1.firebasedatabase.app",  // ✅ ← これがURLです！
+  projectId: "maps-server-2",
+  storageBucket: "maps-server-2.firebasestorage.app",
+  messagingSenderId: "583681392321",
+  appId: "1:583681392321:web:63a5ee1e28752ce03ade40"
 };
+
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
