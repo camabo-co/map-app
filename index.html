@@ -7,32 +7,11 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      background: #f2f2f2;
-    }
-    #map {
-      height: 80vh;
-      width: 100%;
-      max-width: 1000px;
-      margin: 0 auto;
-      background-color: #e6e6e6;
-    }
-    form, .buttons {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-      margin: 10px auto;
-    }
-    input, select, button, textarea {
-      padding: 6px;
-      font-size: 14px;
-    }
-    .csv-box {
-      margin-top: 20px;
-    }
+    body { font-family: sans-serif; text-align: center; background: #f2f2f2; }
+    #map { height: 80vh; width: 100%; max-width: 1000px; margin: 0 auto; background-color: #e6e6e6; }
+    form, .buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 10px auto; }
+    input, select, button, textarea { padding: 6px; font-size: 14px; }
+    .csv-box { margin-top: 20px; }
   </style>
 </head>
 <body>
@@ -78,10 +57,118 @@
   <button onclick="importCSV()">📥 CSVから一括登録</button>
 </div>
 
+<!-- ✅ 重複削除ボタン -->
+<div style="margin: 10px;">
+  <button onclick="removeDuplicateCoordinates()">⚠️ 重複座標を整理</button>
+</div>
+
 <div id="map"></div>
 
-<!-- ✅ map.js 読み込み（地図、登録、リスト機能） -->
+<!-- ✅ 地図・リスト用スクリプト -->
 <script type="module" src="scripts/map.js"></script>
+
+<!-- ✅ Firebase操作スクリプト（登録・CSV・重複削除） -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+  import {
+    getDatabase,
+    ref,
+    push,
+    get,
+    child,
+    remove
+  } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+
+  const app = initializeApp({
+    apiKey: "AIzaSyDdNI04D1xhQihN3DBDdF1_YAp6XRcErDw",
+    authDomain: "maps3-986-ffbbd.firebaseapp.com",
+    databaseURL: "https://maps3-986-ffbbd-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "maps3-986-ffbbd",
+    storageBucket: "maps3-986-ffbbd.appspot.com",
+    messagingSenderId: "701191378459",
+    appId: "1:701191378459:web:d2cf8d869f5cba869d0abe"
+  });
+
+  const db = getDatabase(app);
+
+  // ✅ CSV登録
+  window.importCSV = async function () {
+    const text = document.getElementById("csvInput").value.trim();
+    if (!text) return alert("CSVデータを入力してください");
+
+    const lines = text.split("\n");
+    let successCount = 0, failCount = 0;
+
+    const snapshot = await get(child(ref(db), "coordinates"));
+    const existing = snapshot.exists() ? snapshot.val() : {};
+    const existsMap = {};
+    for (const key in existing) {
+      const item = existing[key];
+      existsMap[`${item.X},${item.Y}`] = true;
+    }
+
+    for (const line of lines) {
+      const [サーバー名, X, Y, レベル, 目印] = line.split(",").map(x => x.trim());
+      const keyXY = `${parseInt(X)},${parseInt(Y)}`;
+      if (!/^\d{3,4}$/.test(サーバー名) || isNaN(X) || isNaN(Y) || !レベル || existsMap[keyXY]) {
+        failCount++;
+        continue;
+      }
+
+      await push(ref(db, "coordinates"), {
+        サーバー名,
+        X: parseInt(X),
+        Y: parseInt(Y),
+        レベル,
+        取得状況: "未取得",
+        目印: 目印 || ""
+      });
+
+      successCount++;
+    }
+
+    alert(`登録完了：成功 ${successCount} 件 / 失敗 ${failCount} 件`);
+    if (window.loadMarkers) await window.loadMarkers();
+    if (window.refreshListTabs) window.refreshListTabs();
+  };
+
+  // ✅ 重複座標を削除（1件だけ残す）
+  window.removeDuplicateCoordinates = async function () {
+    const snapshot = await get(child(ref(db), "coordinates"));
+    if (!snapshot.exists()) {
+      alert("データが存在しません。");
+      return;
+    }
+
+    const data = snapshot.val();
+    const coordMap = {}; // key: "X,Y" → [key1, key2,...]
+
+    for (const key in data) {
+      const item = data[key];
+      if (item.X !== undefined && item.Y !== undefined) {
+        const coordKey = `${item.X},${item.Y}`;
+        if (!coordMap[coordKey]) coordMap[coordKey] = [];
+        coordMap[coordKey].push(key);
+      }
+    }
+
+    let deleteCount = 0;
+
+    for (const coordKey in coordMap) {
+      const keys = coordMap[coordKey];
+      if (keys.length > 1) {
+        for (let i = 1; i < keys.length; i++) {
+          await remove(ref(db, `coordinates/${keys[i]}`));
+          deleteCount++;
+        }
+      }
+    }
+
+    alert(`重複削除完了：${deleteCount} 件の座標を削除しました。`);
+    if (window.loadMarkers) await window.loadMarkers();
+    if (window.refreshListTabs) window.refreshListTabs();
+  };
+</script>
 
 </body>
 </html>
