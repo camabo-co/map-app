@@ -52,6 +52,74 @@
 <div id="map"></div>
 
 <script type="module" src="scripts/map.js"></script>
+<!-- ✅ 修正済み CSV登録部のみ抽出（map.js読み込み後に配置） -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+  import { getDatabase, ref, push, get, child } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
+
+  const app = initializeApp({
+    apiKey: "AIzaSyDdNI04D1xhQihN3DBDdF1_YAp6XRcErDw",
+    authDomain: "maps3-986-ffbbd.firebaseapp.com",
+    databaseURL: "https://maps3-986-ffbbd-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "maps3-986-ffbbd",
+    storageBucket: "maps3-986-ffbbd.appspot.com",
+    messagingSenderId: "701191378459",
+    appId: "1:701191378459:web:d2cf8d869f5cba869d0abe"
+  });
+
+  const db = getDatabase(app);
+
+  window.importCSV = async function () {
+    const text = document.getElementById("csvInput").value.trim();
+    if (!text) return alert("CSVデータを入力してください");
+
+    const lines = text.split("\n");
+    let successCount = 0, failCount = 0;
+
+    // 登録済み座標の取得（重複回避）
+    const snapshot = await get(child(ref(db), "coordinates"));
+    const existing = snapshot.exists() ? snapshot.val() : {};
+    const existsMap = {};
+    for (const key in existing) {
+      const item = existing[key];
+      existsMap[`${item.X},${item.Y}`] = true;
+    }
+
+    for (const line of lines) {
+      const [サーバー名, X, Y, レベル, 目印] = line.split(",").map(x => x.trim());
+
+      if (!/^\d{3,4}$/.test(サーバー名) || isNaN(X) || isNaN(Y) || !レベル) {
+        failCount++;
+        continue;
+      }
+
+      const keyXY = `${parseInt(X)},${parseInt(Y)}`;
+      if (existsMap[keyXY]) {
+        failCount++;
+        continue;
+      }
+
+      await push(ref(db, "coordinates"), {
+        サーバー名,
+        X: parseInt(X),
+        Y: parseInt(Y),
+        レベル,
+        取得状況: "未取得",
+        目印: 目印 || ""
+      });
+
+      successCount++;
+    }
+
+    alert(`登録完了：成功 ${successCount} 件 / 失敗 ${failCount} 件`);
+
+    // ✅ マーカー再描画
+    if (window.loadMarkers) {
+      await window.loadMarkers();
+      if (window.refreshListTabs) window.refreshListTabs();
+    }
+  };
+</script>
 
 </body>
 </html>
