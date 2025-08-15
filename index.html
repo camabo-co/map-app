@@ -1,160 +1,121 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <title>991座標マップ</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>986座標マップ</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script type="module" src="scripts/map.js"></script>
   <style>
     body {
       font-family: sans-serif;
       margin: 0;
-      background: #f5f5f5;
+      padding: 0;
+      background-color: #f0f0f0;
       text-align: center;
     }
-
-    h1 {
-      margin: 20px 0 10px;
+    h2 {
+      background: #4682B4;
+      color: white;
+      margin: 0;
+      padding: 10px;
     }
-
-    #form-area {
+    .form-group, .button-row {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
       gap: 10px;
-      margin: 10px auto;
-      max-width: 900px;
+      margin: 10px;
     }
-
-    #form-area input, #form-area select {
+    input, select, button, textarea {
+      font-size: 14px;
       padding: 6px;
-      font-size: 14px;
-      width: 100px;
-      max-width: 100%;
     }
-
-    #coordinateForm button {
-      padding: 6px 12px;
-      font-size: 14px;
-      background-color: #4fc3f7;
+    input, select {
+      width: 100px;
+    }
+    button {
+      background-color: #00bfff;
       color: white;
       border: none;
       border-radius: 4px;
       cursor: pointer;
     }
-
-    #coordinateForm button:hover {
-      background-color: #039be5;
+    button:hover {
+      background-color: #1a9cd9;
     }
-
-    .button-group {
-      margin: 15px auto;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-      max-width: 600px;
-    }
-
-    .button-group button {
-      padding: 8px 14px;
-      font-size: 14px;
-      background-color: #4fc3f7;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      width: 140px;
-    }
-
-    .button-group button:hover {
-      background-color: #039be5;
-    }
-
-    #map {
-      width: 100%;
-      max-width: 1000px;
-      height: 1000px;
-      margin: 20px auto;
-      background: #e0e0e0;
-    }
-
     textarea {
       width: 90%;
       max-width: 600px;
-      height: 100px;
+      height: 80px;
+    }
+    #map {
+      height: 70vh;
+      width: 100%;
       margin-top: 10px;
-      font-size: 14px;
+    }
+    #passwordScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: white;
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #passwordScreen input {
+      font-size: 18px;
+      padding: 10px;
+      width: 200px;
     }
   </style>
 </head>
 <body>
-
-  <!-- ✅ パスワード入力 -->
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const pass = prompt("パスワードを入力してください");
-      if (pass !== "hihou991") {
-        alert("パスワードが間違っています");
-        location.href = "https://www.google.com/";
+<div id="passwordScreen">
+  <input id="pw" type="password" placeholder="パスワードを入力">
+</div>
+<h2>986座標マップ</h2>
+<div class="form-group">
+  <input id="server" placeholder="サーバー名">
+  <input id="x" placeholder="X座標">
+  <input id="y" placeholder="Y座標">
+  <select id="level">
+    <option value="">Lv</option>
+    <option value="1">Lv1</option>
+    <option value="2">Lv2</option>
+    <option value="3">Lv3</option>
+    <option value="4">Lv4</option>
+    <option value="5">Lv5</option>
+    <option value="6">Lv6</option>
+    <option value="7">Lv7</option>
+  </select>
+  <input id="mark" placeholder="目印（任意）">
+  <button onclick="registerCoordinate()">登録</button>
+</div>
+<div class="button-row">
+  <button onclick="openListTab('未取得')">📋 未取得リスト</button>
+  <button onclick="openListTab('取得済み')">📋 取得済みリスト</button>
+  <button onclick="exportCSV('未取得')">📁 未取得CSV</button>
+  <button onclick="exportCSV('取得済み')">📁 取得済みCSV</button>
+  <button onclick="dedupeCoordinates()">✍ 重複座標を整理</button>
+</div>
+<textarea id="csvInput" placeholder="CSV形式: サーバー名, X, Y, レベル, 目印"></textarea>
+<button onclick="importCSV()">📅 CSVから一括登録</button>
+<div id="map"></div>
+<script>
+  document.getElementById("pw").addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      if (e.target.value === "hsyu986") {
+        document.getElementById("passwordScreen").style.display = "none";
+      } else {
+        location.href = "https://www.google.com";
       }
-    });
-  </script>
-
-  <!-- ✅ タイトル -->
-  <h1>991座標マップ</h1>
-
-  <!-- ✅ 登録フォーム -->
-  <form id="coordinateForm">
-    <div id="form-area">
-      <input type="text" name="サーバー名" placeholder="サーバー名" required />
-      <input type="number" name="X" placeholder="X座標" required min="0" max="999" />
-      <input type="number" name="Y" placeholder="Y座標" required min="0" max="999" />
-      <select name="レベル" required>
-        <option value="1">Lv1</option>
-        <option value="2">Lv2</option>
-        <option value="3">Lv3</option>
-        <option value="4">Lv4</option>
-        <option value="5">Lv5</option>
-        <option value="6">Lv6</option>
-        <option value="7">Lv7</option>
-      </select>
-      <input type="text" name="目印" placeholder="目印（任意）" />
-      <button type="submit">登録</button>
-    </div>
-  </form>
-
-  <!-- ✅ 一覧・CSV・重複ボタン -->
-  <div class="button-group">
-    <button id="toggleUnclaimed">📋 未取得リスト</button>
-    <button id="toggleClaimed">📋 取得済みリスト</button>
-    <button id="exportUnclaimedCSV">📁 未取得CSV</button>
-    <button id="exportClaimedCSV">📁 取得済みCSV</button>
-    <button id="dedupeButton">🧹 重複座標を整理</button>
-  </div>
-
-  <!-- ✅ CSV一括入力欄 -->
-  <textarea id="csvInput" placeholder="CSV形式: サーバー名,X,Y,レベル,目印"></textarea>
-  <div style="margin-top: 10px;">
-    <button onclick="importCSV()">📥 CSVから一括登録</button>
-  </div>
-
-  <!-- ✅ マップ -->
-  <div id="map"></div>
-
-  <!-- ✅ Leaflet描画エラー対策 -->
-  <script>
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        if (window.map && window.map.invalidateSize) {
-          window.map.invalidateSize();
-        }
-      }, 300);
-    });
-  </script>
-
-  <!-- ✅ JavaScript（map.js連携） -->
-  <script type="module" src="scripts/map.js"></script>
-
+    }
+  });
+</script>
 </body>
 </html>
