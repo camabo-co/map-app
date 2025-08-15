@@ -1,174 +1,61 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>座標マップ</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <style>
-    body { font-family: sans-serif; text-align: center; background: #f2f2f2; }
-    #map { height: 80vh; width: 100%; max-width: 1000px; margin: 0 auto; background-color: #e6e6e6; }
-    form, .buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 10px auto; }
-    input, select, button, textarea { padding: 6px; font-size: 14px; }
-    .csv-box { margin-top: 20px; }
+    body { font-family: sans-serif; margin: 0; padding: 0; text-align: center; }
+    #map { height: 800px; width: 100%; background-color: #f2f2f2; }
+    .controls { margin: 10px; }
+    textarea { width: 80%; height: 100px; }
   </style>
 </head>
 <body>
 
-<!-- ✅ パスワード保護 -->
 <script>
-  const password = prompt("パスワードを入力してください:");
-  if (password !== "wareranochonnma") {
-    alert("パスワードが間違っています。");
-    document.body.innerHTML = "<h2>アクセスが拒否されました</h2>";
-    throw new Error("Unauthorized access");
-  }
+  document.addEventListener("DOMContentLoaded", () => {
+    const password = prompt("パスワードを入力してください");
+    if (password !== "hsyu986") {
+      alert("パスワードが違います");
+      window.location.href = "https://google.coml"; // ⬅️ 間違えたらこのページへ
+    }
+  });
 </script>
 
-<h2>座標マップアプリ</h2>
+<h1>座標マップ</h1>
 
-<div class="buttons">
+<div class="controls">
+  <form id="coordinateForm">
+    <input name="サーバー名" placeholder="サーバー名" required />
+    <input name="X" type="number" placeholder="X座標" required />
+    <input name="Y" type="number" placeholder="Y座標" required />
+    <select name="レベル" required>
+      <option value="">レベル</option>
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+    </select>
+    <input name="目印" placeholder="目印" />
+    <button type="submit">登録</button>
+  </form>
+
+  <textarea id="csvInput" placeholder="CSV貼り付け（サーバー名,X,Y,レベル,目印）"></textarea><br>
+  <button onclick="importCSV()">📥 CSV一括登録</button>
+  <button id="dedupeButton">🧹 重複整理</button>
   <button id="toggleUnclaimed">📋 未取得リスト</button>
   <button id="toggleClaimed">📋 取得済みリスト</button>
-</div>
-
-<!-- ✅ 通常登録フォーム -->
-<form id="coordinateForm">
-  <input type="text" name="サーバー名" placeholder="サーバー名（数字）" required>
-  <input type="number" name="X" placeholder="X座標 (0~999)" required>
-  <input type="number" name="Y" placeholder="Y座標 (0~999)" required>
-  <select name="レベル" required>
-    <option value="1">Lv1</option>
-    <option value="2">Lv2</option>
-    <option value="3">Lv3</option>
-    <option value="4">Lv4</option>
-    <option value="5">Lv5</option>
-    <option value="6">Lv6</option>
-    <option value="7">Lv7</option>
-  </select>
-  <input type="text" name="目印" placeholder="目印（任意）">
-  <button type="submit">登録</button>
-</form>
-
-<!-- ✅ CSV一括取り込み -->
-<div class="csv-box">
-  <textarea id="csvInput" placeholder="サーバー名,X,Y,レベル,目印（任意）を1行ずつ入力" rows="5" cols="60"></textarea><br>
-  <button onclick="importCSV()">📥 CSVから一括登録</button>
-</div>
-
-<!-- ✅ 重複削除ボタン -->
-<div style="margin: 10px;">
-  <button onclick="removeDuplicateCoordinates()">⚠️ 重複座標を整理</button>
+  <button id="exportUnclaimedCSV">📤 未取得CSV出力</button>
+  <button id="exportClaimedCSV">📤 取得済みCSV出力</button>
 </div>
 
 <div id="map"></div>
 
-<!-- ✅ 地図・リスト用スクリプト -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script type="module" src="scripts/map.js"></script>
-
-<!-- ✅ Firebase操作スクリプト（登録・CSV・重複削除） -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-  import {
-    getDatabase,
-    ref,
-    push,
-    get,
-    child,
-    remove
-  } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
-
-  const app = initializeApp({
-    apiKey: "AIzaSyDdNI04D1xhQihN3DBDdF1_YAp6XRcErDw",
-    authDomain: "maps3-986-ffbbd.firebaseapp.com",
-    databaseURL: "https://maps3-986-ffbbd-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "maps3-986-ffbbd",
-    storageBucket: "maps3-986-ffbbd.appspot.com",
-    messagingSenderId: "701191378459",
-    appId: "1:701191378459:web:d2cf8d869f5cba869d0abe"
-  });
-
-  const db = getDatabase(app);
-
-  // ✅ CSV登録
-  window.importCSV = async function () {
-    const text = document.getElementById("csvInput").value.trim();
-    if (!text) return alert("CSVデータを入力してください");
-
-    const lines = text.split("\n");
-    let successCount = 0, failCount = 0;
-
-    const snapshot = await get(child(ref(db), "coordinates"));
-    const existing = snapshot.exists() ? snapshot.val() : {};
-    const existsMap = {};
-    for (const key in existing) {
-      const item = existing[key];
-      existsMap[`${item.X},${item.Y}`] = true;
-    }
-
-    for (const line of lines) {
-      const [サーバー名, X, Y, レベル, 目印] = line.split(",").map(x => x.trim());
-      const keyXY = `${parseInt(X)},${parseInt(Y)}`;
-      if (!/^\d{3,4}$/.test(サーバー名) || isNaN(X) || isNaN(Y) || !レベル || existsMap[keyXY]) {
-        failCount++;
-        continue;
-      }
-
-      await push(ref(db, "coordinates"), {
-        サーバー名,
-        X: parseInt(X),
-        Y: parseInt(Y),
-        レベル,
-        取得状況: "未取得",
-        目印: 目印 || ""
-      });
-
-      successCount++;
-    }
-
-    alert(`登録完了：成功 ${successCount} 件 / 失敗 ${failCount} 件`);
-    if (window.loadMarkers) await window.loadMarkers();
-    if (window.refreshListTabs) window.refreshListTabs();
-  };
-
-  // ✅ 重複座標を削除（1件だけ残す）
-  window.removeDuplicateCoordinates = async function () {
-    const snapshot = await get(child(ref(db), "coordinates"));
-    if (!snapshot.exists()) {
-      alert("データが存在しません。");
-      return;
-    }
-
-    const data = snapshot.val();
-    const coordMap = {}; // key: "X,Y" → [key1, key2,...]
-
-    for (const key in data) {
-      const item = data[key];
-      if (item.X !== undefined && item.Y !== undefined) {
-        const coordKey = `${item.X},${item.Y}`;
-        if (!coordMap[coordKey]) coordMap[coordKey] = [];
-        coordMap[coordKey].push(key);
-      }
-    }
-
-    let deleteCount = 0;
-
-    for (const coordKey in coordMap) {
-      const keys = coordMap[coordKey];
-      if (keys.length > 1) {
-        for (let i = 1; i < keys.length; i++) {
-          await remove(ref(db, `coordinates/${keys[i]}`));
-          deleteCount++;
-        }
-      }
-    }
-
-    alert(`重複削除完了：${deleteCount} 件の座標を削除しました。`);
-    if (window.loadMarkers) await window.loadMarkers();
-    if (window.refreshListTabs) window.refreshListTabs();
-  };
-</script>
 
 </body>
 </html>
