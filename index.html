@@ -1,70 +1,107 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>座標マップ</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>991座標マップ</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <style>
     body {
       font-family: sans-serif;
       margin: 0;
       padding: 0;
-      text-align: center;
+      background: #f0f0f0;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px;
+    }
+    form {
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 90%;
+      max-width: 400px;
+    }
+    label {
+      font-weight: bold;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 8px;
+      font-size: 14px;
+    }
+    button, input[type="button"] {
+      background-color: #4FC3F7;
+      color: white;
+      padding: 8px 20px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      width: fit-content;
+      align-self: center;
+      margin: 6px auto;
+      display: block;
+    }
+    button:hover, input[type="button"]:hover {
+      background-color: #29B6F6;
     }
     #map {
+      height: 600px;
       width: 100%;
-      height: 90vh;
-    }
-    form, .controls {
-      margin: 5px;
-      font-size: 14px;
+      max-width: 1000px;
+      margin: 0 auto;
     }
     textarea {
-      width: 90%;
-      height: 60px;
-    }
-    button {
-      margin: 5px;
-      padding: 8px 12px;
-      font-size: 14px;
+      resize: vertical;
     }
   </style>
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const password = prompt("パスワードを入力してください：");
-      if (password !== "hsyu986") {
-        alert("パスワードが間違っています。Googleに移動します。");
-        window.location.href = "https://www.google.com";
-      }
-    });
-  </script>
 </head>
 <body>
-  <h2>座標マップ（未取得のみ表示）</h2>
-
-  <div class="controls">
+  <div class="container">
     <form id="coordinateForm">
-      <input name="サーバー名" placeholder="サーバー名" required>
-      <input name="X" type="number" placeholder="X" required>
-      <input name="Y" type="number" placeholder="Y" required>
-      <input name="レベル" type="number" placeholder="レベル" required>
-      <input name="目印" placeholder="目印">
+      <label>サーバー名</label>
+      <input type="text" name="サーバー名" required />
+      <label>X座標</label>
+      <input type="number" name="X" required />
+      <label>Y座標</label>
+      <input type="number" name="Y" required />
+      <label>レベル</label>
+      <select name="レベル">
+        <option>Lv1</option>
+        <option>Lv2</option>
+        <option>Lv3</option>
+        <option>Lv4</option>
+        <option>Lv5</option>
+        <option>Lv6</option>
+        <option>Lv7</option>
+      </select>
+      <label>目印（任意）</label>
+      <input type="text" name="目印" />
       <button type="submit">登録</button>
     </form>
 
-    <textarea id="csvInput" placeholder="CSV形式で貼り付け（サーバー名,X,Y,レベル,目印）"></textarea><br>
-    <button onclick="importCSV()">CSV一括登録</button>
-    <button id="dedupeButton">重複整理</button>
-    <button id="toggleUnclaimed">📋 未取得リスト</button>
-    <button id="toggleClaimed">📋 取得済みリスト</button>
-    <button id="exportUnclaimedCSV">⬇ 未取得CSV出力</button>
-    <button id="exportClaimedCSV">⬇ 取得済みCSV出力</button>
+    <input type="button" value="📋 未取得リスト" id="toggleUnclaimed">
+    <input type="button" value="📋 取得済みリスト" id="toggleClaimed">
+    <input type="button" value="📁 未取得CSV" id="exportUnclaimedCSV">
+    <input type="button" value="📁 取得済みCSV" id="exportClaimedCSV">
+    <input type="button" value="🧹 重複座標を整理" id="dedupeButton">
+
+    <textarea id="csvInput" rows="4" placeholder="サーバー名, X, Y, レベル, 目印（任意） を一行ずつ入力"></textarea>
+    <input type="button" value="📥 CSVから一括登録" onclick="importCSV()">
   </div>
 
   <div id="map"></div>
 
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script type="module" src="scripts/map.js"></script>
 </body>
 </html>
