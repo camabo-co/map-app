@@ -225,5 +225,24 @@ window.cleanDuplicates = async function () {
   loadMarkers();
 };
 
+window.deleteAllUnclaimed = async function () {
+  const unclaimed = Object.entries(coordinatesData).filter(([_, d]) => d.取得状況 === "未取得");
+
+  if (unclaimed.length === 0) {
+    alert("未取得の座標はありません");
+    return;
+  }
+
+  if (!confirm(`未取得の座標 ${unclaimed.length} 件をすべて削除しますか？`)) return;
+
+  for (const [key] of unclaimed) {
+    await remove(ref(db, `coordinates/${key}`));
+  }
+
+  alert("未取得座標をすべて削除しました");
+  loadMarkers();
+};
+
+
 // 初回読み込み
 loadMarkers();
