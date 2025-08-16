@@ -45,31 +45,47 @@
 </head>
 <body>
 
-  <div id="main">
-    <div class="button-row">
-      <button class="icon-button" onclick="openListTab('未取得')">📋 未取得リスト</button>
-      <button class="icon-button" onclick="openListTab('取得済み')">📋 取得済みリスト</button>
-      <button class="icon-button" onclick="downloadCSV('未取得')">⬇ 未取得CSV</button>
-      <button class="icon-button" onclick="downloadCSV('取得済み')">⬇ 取得済みCSV</button>
-      <button class="icon-button danger" onclick="cleanDuplicates()">🧹 重複整理</button>
-      <button onclick="deleteAllUnclaimed()">🧹 未取得をすべて削除</button>
-
-    </div>
-
-    <form id="csvForm">
-      <div style="text-align:left; margin-bottom:5px;">CSV形式で一括登録：サーバー名, X, Y, レベル, 目印</div>
-      <textarea id="csvInput" placeholder="例：986,500,500,3,塔の北西"></textarea>
-      <button type="submit" class="icon-button">📂 CSVから一括登録</button>
-    </form>
-
-    <div id="map"></div>
+ <div id="main">
+  <div class="button-row">
+    <button class="icon-button" onclick="openListTab('未取得')">📋 未取得リスト</button>
+    <button class="icon-button" onclick="openListTab('取得済み')">📋 取得済みリスト</button>
+    <button class="icon-button" onclick="downloadCSV('未取得')">⬇ 未取得CSV</button>
+    <button class="icon-button" onclick="downloadCSV('取得済み')">⬇ 取得済みCSV</button>
+    <button class="icon-button danger" onclick="cleanDuplicates()">🧹 重複整理</button>
+    <button onclick="deleteAllUnclaimed()">🧹 未取得をすべて削除</button>
   </div>
 
+  <div class="input-row">
+    <input type="text" id="server" placeholder="サーバー名" />
+    <input type="number" id="x" placeholder="X座標" />
+    <input type="number" id="y" placeholder="Y座標" />
+    <select id="level">
+      <option value="1">Lv</option>
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+    </select>
+    <input type="text" id="note" placeholder="目印（任意）" />
+    <button onclick="registerCoordinate()">登録</button>
+  </div>
+
+  <!-- 🔽 ここからも main の中に入れる -->
+  <form id="csvForm">
+    <div style="text-align:left; margin-bottom:5px;">
+      CSV形式で一括登録：サーバー名, X, Y, レベル, 目印
+    </div>
+    <textarea id="csvInput" placeholder="例：986,500,500,3,塔の北西"></textarea>
+    <button type="submit" class="icon-button">📂 CSVから一括登録</button>
+  </form>
+
+  <div id="map"></div>
+</div> <!-- ← これが #main の正しい終了位置 -->
   <!-- Leaflet & Firebase連携用 JavaScript -->
   <script type="module" src="scripts/map.js"></script>
 
 </body>
 </html>
+
 
 
 
