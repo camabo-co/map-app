@@ -1,91 +1,155 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>パスワード認証</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
+    :root {
+      --bg: #eef2f7;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
     body {
-      font-family: "Arial", sans-serif;
-      background-color: #eee;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
       margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic UI", sans-serif;
+      color: var(--text);
+      background: radial-gradient(1200px 800px at 50% -10%, #dbeafe, var(--bg));
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 20px;
     }
     .login-box {
-      background: white;
-      padding: 20px 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
-      text-align: center;
-      max-width: 320px;
       width: 100%;
+      max-width: 380px;
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px 26px;
     }
-    input[type="password"],
-    input[type="text"] {
-      padding: 8px;
-      font-size: 16px;
-      width: 80%;
-      margin-top: 10px;
-      margin-bottom: 20px;
+    h2 {
+      margin: 0 0 10px;
+      font-size: 1.25rem;
+      text-align: center;
+      letter-spacing: .02em;
+    }
+    p.sub {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      text-align: center;
     }
     .password-wrapper {
       position: relative;
-      display: inline-block;
+      margin-top: 10px;
+    }
+    input[type="password"],
+    input[type="text"] {
       width: 100%;
+      font-size: 16px;
+      padding: 12px 44px 12px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, .15);
     }
     .eye-icon {
       position: absolute;
-      top: 10px;
-      right: 35px;
+      top: 50%;
+      right: 12px;
+      transform: translateY(-50%);
       cursor: pointer;
       font-size: 18px;
+      user-select: none;
+      color: #64748b;
     }
     button {
-      padding: 8px 20px;
+      width: 100%;
+      margin-top: 16px;
+      padding: 12px 16px;
       font-size: 16px;
       cursor: pointer;
-      border-radius: 6px;
+      border-radius: 10px;
       border: none;
-      background-color: #4CAF50;
-      color: white;
+      background: var(--accent);
+      color: #fff;
+      transition: background .2s, transform .02s;
+    }
+    button:hover { background: var(--accent-hover); }
+    button:active { transform: translateY(1px); }
+    .hint {
+      margin-top: 14px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
     }
   </style>
 </head>
 <body>
 
-<div class="login-box">
-  <h2>パスワードを入力してください</h2>
-  <div class="password-wrapper">
-    <input type="hihou991" id="passwordInput" placeholder="パスワード">
-    <span class="eye-icon" onclick="togglePassword()">👁️</span>
+  <div class="login-box">
+    <h2>パスワードを入力してください</h2>
+    <p class="sub">正しい場合はマップ（main.html）へ移動します。</p>
+
+    <div class="password-wrapper">
+      <input
+        type="password"
+        id="passwordInput"
+        placeholder="パスワード"
+        autocomplete="current-password"
+        inputmode="text"
+        aria-label="パスワード"
+      />
+      <span class="eye-icon" id="toggleEye" title="表示/非表示">👁️</span>
+    </div>
+
+    <button id="okBtn" type="button">OK</button>
+    <div class="hint">Enterキーでも送信できます</div>
   </div>
-  <br>
-  <button onclick="checkPassword()">OK</button>
-</div>
 
-<script>
-  function togglePassword() {
+  <script>
+    // ✅ パスワードをここで設定
+    const CORRECT_PASSWORD = "hihou991";
+
     const input = document.getElementById("passwordInput");
-    input.type = input.type === "password" ? "text" : "password";
-  }
+    const okBtn = document.getElementById("okBtn");
+    const toggleEye = document.getElementById("toggleEye");
 
-  function checkPassword() {
-    const input = document.getElementById("passwordInput");
-    const pass = input.value;
-
-    if (pass === "takara991") {
-      window.location.href = "main.html";
-    } else {
-      alert("パスワードが違います。もう一度試してください。");
-      input.value = "";
+    function togglePassword() {
+      const isPwd = input.type === "password";
+      input.type = isPwd ? "text" : "password";
+      toggleEye.textContent = isPwd ? "🙈" : "👁️";
       input.focus();
     }
-  }
-</script>
+
+    function checkPassword() {
+      const pass = input.value.trim();
+      if (pass === CORRECT_PASSWORD) {
+        window.location.href = "main.html";
+      } else {
+        window.location.href = "https://www.google.com/";
+      }
+    }
+
+    toggleEye.addEventListener("click", togglePassword);
+    okBtn.addEventListener("click", checkPassword);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") checkPassword();
+    });
+
+    input.focus();
+  </script>
 
 </body>
 </html>
-
