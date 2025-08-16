@@ -12,7 +12,7 @@ import {
   remove
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-database.js";
 
-✅ Firebase 初期化（あなたの構成に対応済）
+//✅ Firebase 初期化（あなたの構成に対応済）
 const firebaseConfig = {
   apiKey: "AIzaSyBIeAUT8GTZ27KYLMSAQxdcy3wC8xGmwcE",
   authDomain: "maps-server-2.firebaseapp.com",
