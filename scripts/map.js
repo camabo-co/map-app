@@ -242,6 +242,49 @@ window.deleteAllUnclaimed = async function () {
   alert("未取得座標をすべて削除しました");
   loadMarkers();
 };
+// ✅ 登録ボタンの処理
+window.registerCoordinate = async function () {
+  const サーバー名 = document.getElementById("server").value.trim();
+  const X = document.getElementById("x").value.trim();
+  const Y = document.getElementById("y").value.trim();
+  const レベル = document.getElementById("level").value;
+  const 目印 = document.getElementById("note").value.trim();
+
+  if (!サーバー名 || !X || !Y || !レベル) {
+    alert("すべての項目を入力してください");
+    return;
+  }
+
+  const duplicate = Object.entries(coordinatesData).find(([_, d]) =>
+    d.X == X && d.Y == Y && d.サーバー名 == サーバー名
+  );
+
+  if (duplicate) {
+    const [dupKey] = duplicate;
+    await update(ref(db, `coordinates/${dupKey}`), {
+      レベル,
+      目印,
+      取得状況: "未取得"
+    });
+  } else {
+    await push(ref(db, "coordinates"), {
+      サーバー名,
+      X,
+      Y,
+      レベル,
+      目印,
+      取得状況: "未取得"
+    });
+  }
+
+  alert("座標を登録しました");
+  document.getElementById("server").value = "";
+  document.getElementById("x").value = "";
+  document.getElementById("y").value = "";
+  document.getElementById("note").value = "";
+  loadMarkers();
+};
+
 
 
 // 初回読み込み
